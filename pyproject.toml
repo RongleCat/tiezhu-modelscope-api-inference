@@ -1,0 +1,16 @@
+[project]
+name = "tiezhu-modelscope-api-inference"
+version = "0.1.0"
+description = "Skill and CLI for calling ModelScope API-Inference free models."
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "RongleCat" }]
+dependencies = []
+
+[project.scripts]
+tiezhu-modelscope = "scripts.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scripts*"]
