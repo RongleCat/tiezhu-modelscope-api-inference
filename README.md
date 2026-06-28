@@ -7,10 +7,8 @@
 ## 能做什么
 
 - 文本生成：默认 `ZhipuAI/GLM-5.2`
-- 图片识别输出文本：默认 `moonshotai/Kimi-K2.6`
-- 视频识别输出文本：默认 `moonshotai/Kimi-K2.6`
+- 多模态识别输出文本：默认 `moonshotai/Kimi-K2.6`，用于图片识别、视频拉片和音频/音乐分析
 - 文本生成图片：默认 `Tongyi-MAI/Z-Image-Turbo`
-- 音频输入：使用 `audio_url`，在所选 ModelScope provider 可用时执行
 - 模型列表：安装时初始化缓存，后续可用命令刷新当前 API-Inference 候选
 
 ## 复制给 Agent 的安装请求
@@ -104,11 +102,10 @@ tiezhu-modelscope video \
   --prompt "请做中文拉片，按时间顺序描述画面、字幕和节奏。"
 ```
 
-### 音频输入
+### 音频/音乐分析
 
 ```bash
 tiezhu-modelscope audio \
-  --model Qwen/Qwen3-Omni-30B-A3B-Instruct \
   --file "/path/to/music.mp3" \
   --prompt "请分析这段音乐的曲风、情绪、结构、人声和配器。"
 ```
@@ -121,7 +118,7 @@ tiezhu-modelscope audio \
 tiezhu-modelscope refresh
 ```
 
-之后需要更新本地模型列表时，重新运行同一个命令即可。它会把文本、多模态、视频、文生图、音频相关的 API-Inference 候选写入 `cache/`：
+之后需要更新本地模型列表时，重新运行同一个命令即可。它会把文本、多模态、文生图三类 API-Inference 候选写入 `cache/`：
 
 ```bash
 tiezhu-modelscope refresh
@@ -148,10 +145,17 @@ tiezhu-modelscope init-models
 tiezhu-modelscope catalog text
 tiezhu-modelscope catalog multimodal
 tiezhu-modelscope catalog image
-tiezhu-modelscope catalog audio
 ```
 
 不传 `--model` 时，CLI 会优先使用默认模型，再结合本地模型列表缓存和偏好路由。缓存不存在时，CLI 会即时拉取对应任务的模型列表并写入 `cache/`。传入 `--model` 时，优先使用用户指定模型。
+
+安装完成摘要或模型列表表格只需要列三类：
+
+| 分类 | 用途 |
+| --- | --- |
+| 文本生成 (`text`) | 纯文本 prompt 到文本输出 |
+| 多模态识别 (`multimodal`) | 图片识别、视频拉片、音频/音乐分析到文本输出 |
+| 文本生成图片 (`image`) | 文本 prompt 到图片输出 |
 
 ## 媒体 URL
 

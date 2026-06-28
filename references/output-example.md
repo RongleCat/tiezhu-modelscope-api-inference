@@ -42,7 +42,7 @@ tiezhu-modelscope vision \
 输入：
 
 ```bash
-tiezhu-modelscope audio --model Qwen/Qwen3-Omni-30B-A3B-Instruct --file song.mp3
+tiezhu-modelscope audio --file song.mp3
 ```
 
 模型返回：
@@ -50,7 +50,7 @@ tiezhu-modelscope audio --model Qwen/Qwen3-Omni-30B-A3B-Instruct --file song.mp3
 ```json
 {
   "ok": false,
-  "error": "Model id ... has no provider supported"
+  "error": "Model id ... does not support audio_url or has no provider supported"
 }
 ```
 
@@ -63,5 +63,5 @@ tiezhu-modelscope audio --model Qwen/Qwen3-Omni-30B-A3B-Instruct --file song.mp3
 正确答复：
 
 ```text
-这次没有完成音乐分析。文件已按 audio_url 路径提交，但该模型当前没有可用 ModelScope API-Inference provider。
+这次没有完成音乐分析。文件已按 audio_url 路径提交，但当前多模态模型或 ModelScope provider 不支持该音频输入。
 ```

@@ -17,10 +17,8 @@ description: >-
 让用户不用研究 ModelScope API-Inference 的接口细节，也能直接调用魔搭免费模型完成：
 
 - 文本生成。
-- 图片识别输出文本。
+- 多模态识别输出文本，包括图片识别、视频拉片和音频/音乐分析。
 - 文本生成图片。
-- 视频识别输出文本。
-- 音频输入模型可用时的音乐/音频分析。
 
 Skill 负责模型发现、模型列表缓存、默认模型选择、流式解析、图片生成任务轮询、媒体压缩、Uguu 临时 URL 上传和清晰错误输出。
 
@@ -121,6 +119,8 @@ tiezhu-modelscope refresh --preset multimodal
 tiezhu-modelscope refresh --preset image
 ```
 
+安装完成摘要或模型列表表格只列三类：文本生成、多模态识别、文本生成图片。不要把图片识别、视频拉片、音频/音乐分析拆成独立模型池；它们都属于多模态识别。
+
 也可以使用别名：
 
 ```bash
@@ -133,7 +133,7 @@ tiezhu-modelscope init-models
 默认优先模型：
 
 - 文本生成：`ZhipuAI/GLM-5.2`
-- 多模态文本生成：`moonshotai/Kimi-K2.6`
+- 多模态识别输出文本：`moonshotai/Kimi-K2.6`，用于图片、视频、音频输入。
 - 文本生成图片：`Tongyi-MAI/Z-Image-Turbo`
 
 决策分支：
@@ -151,7 +151,7 @@ tiezhu-modelscope init-models
 
 - 上传图片到 Uguu。
 - 把返回的 HTTPS URL 放入 `image_url`。
-- 走多模态文本生成模型。
+- 走多模态识别模型。
 
 视频识别：
 
@@ -159,13 +159,15 @@ tiezhu-modelscope init-models
 - 上传候选 MP4 到 Uguu。
 - 把返回的 HTTPS URL 放入 `video_url`。
 - 发送完整视频 URL。
+- 走多模态识别模型。
 
 音频分析：
 
 - 压缩为 mono 16 kHz MP3。
 - 上传 MP3 到 Uguu。
 - 把返回的 HTTPS URL 放入 `audio_url`。
-- 如果模型返回 `has no provider supported`，说明当前 ModelScope provider 不可用。
+- 走多模态识别模型。
+- 如果模型返回不支持 `audio_url` 或 `has no provider supported`，说明当前 ModelScope provider 不可用。
 
 文本生成图片：
 
@@ -246,7 +248,7 @@ CLI 输出必须是 JSON，便于 Agent 继续处理。
 可验证标准：
 
 - `tiezhu-modelscope --help` 能看到 `catalog,refresh,text,video,vision,audio,image`。
-- `tiezhu-modelscope refresh --page-size 3` 能写入 `cache/*-models.json`。
+- `tiezhu-modelscope refresh --page-size 3` 能写入 `cache/text-models.json`、`cache/multimodal-models.json`、`cache/image-models.json`。
 - `--dry-run` 能显示默认模型排在候选第一位。
 - 真实调用成功时，JSON 里有 `response.choices[0].message.content` 或图片 URL。
 
@@ -259,7 +261,7 @@ CLI 输出必须是 JSON，便于 Agent 继续处理。
 - `quota`、`rate limit`、`429`：切换同能力候选模型。
 - Uguu 上传失败：提示用户检查网络、文件大小或换一个可公开访问的 URL。
 - 视频过大：降低 `--max-mb`，让压缩阶梯选择更小 MP4。
-- 音频模型不可用：如实说明 provider 限制，不要伪造音乐分析结果。
+- 多模态模型不支持当前媒体类型：如实说明 provider 限制，不要伪造分析结果。
 
 如果用户的要求必须调用外部服务，但未授权上传媒体文件，先请求授权。
 

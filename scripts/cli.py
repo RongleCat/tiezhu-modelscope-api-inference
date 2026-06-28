@@ -19,12 +19,12 @@ from .uploader import UguuUploader, UploadError
 DEFAULT_MODELS = {
     "text": "ZhipuAI/GLM-5.2",
     "multimodal": "moonshotai/Kimi-K2.6",
-    "video": "moonshotai/Kimi-K2.6",
     "image": "Tongyi-MAI/Z-Image-Turbo",
 }
 
 
-DEFAULT_REFRESH_PRESETS = ["text", "multimodal", "video", "image", "audio"]
+CATALOG_PRESETS = ["text", "multimodal", "image", "text-to-image"]
+DEFAULT_REFRESH_PRESETS = ["text", "multimodal", "image"]
 
 
 def cmd_catalog(args: argparse.Namespace) -> int:
@@ -120,17 +120,17 @@ def run_video_with_fallback(explicit_model: str | None, prompt: str, videos: lis
             attempts.append({"input_video": str(video), "size_bytes": video.stat().st_size, "upload_error": str(exc)})
             continue
         messages = video_messages(prompt, uploaded_url, fps=fps)
-        for model in candidate_models("video", explicit_model, limit):
+        for model in candidate_models("multimodal", explicit_model, limit):
             try:
                 response = client.chat(model.model_id, messages, stream=True)
-                PreferenceStore(preference_path()).remember("video", model.model_id)
+                PreferenceStore(preference_path()).remember("multimodal", model.model_id)
                 return {"model": model.model_id, "input_video": str(video), "input_url": uploaded_url, "attempts": attempts, "response": response}
             except InferenceError as exc:
                 attempts.append({"model": model.model_id, "input_video": str(video), "input_url": uploaded_url, "size_bytes": video.stat().st_size, "error": str(exc)})
                 if is_quota_error(exc):
                     continue
                 break
-    raise InferenceError(f"all video candidates failed: {attempts}")
+    raise InferenceError(f"all multimodal candidates failed for video input: {attempts}")
 
 
 def dry_run_model_ids(capability: str, explicit_model: str | None, limit: int) -> list[str]:
@@ -161,7 +161,7 @@ def cmd_video(args: argparse.Namespace) -> int:
         "source_info": asdict(info) | {"path": str(info.path)},
         "compressed": [{"path": str(p), "size_bytes": p.stat().st_size} for p in compressed],
         "video_candidates": [{"path": str(p), "size_bytes": p.stat().st_size} for p in video_candidates],
-        "models": dry_run_model_ids("video", args.model, args.candidate_limit),
+        "models": dry_run_model_ids("multimodal", args.model, args.candidate_limit),
         "mode": "direct_video_file",
         "fps": args.fps,
     }
@@ -199,13 +199,13 @@ def cmd_audio(args: argparse.Namespace) -> int:
     out = Path(args.output_dir)
     compressed = compress_audio(source, out / "audio", max_mb=args.max_mb)
     prompt = args.prompt or "请分析这段音乐，输出歌词/人声线索、曲风、情绪、结构段落、配器和适合的内容标签。"
-    report = {"source": str(source), "compressed": str(compressed), "models": dry_run_model_ids("audio", args.model, args.candidate_limit)}
+    report = {"source": str(source), "compressed": str(compressed), "models": dry_run_model_ids("multimodal", args.model, args.candidate_limit)}
     if args.dry_run:
         print(json.dumps(report | {"messages_preview": "audio payload built"}, ensure_ascii=False, indent=2))
         return 0
     uploaded_url = UguuUploader().upload(compressed)
     messages = audio_messages(prompt, uploaded_url)
-    response = run_chat_with_fallback("audio", args.model, messages, args.candidate_limit)
+    response = run_chat_with_fallback("multimodal", args.model, messages, args.candidate_limit)
     print(json.dumps(report | {"input_url": uploaded_url} | response, ensure_ascii=False, indent=2))
     return 0
 
@@ -226,14 +226,14 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     catalog = sub.add_parser("catalog")
-    catalog.add_argument("preset", choices=["text", "audio", "video", "multimodal", "image", "text-to-image"])
+    catalog.add_argument("preset", choices=CATALOG_PRESETS)
     catalog.add_argument("--page-size", type=int, default=30)
     catalog.add_argument("--pages", type=int, default=1)
     catalog.add_argument("--output")
     catalog.set_defaults(func=cmd_catalog)
 
     refresh = sub.add_parser("refresh", aliases=["init-models", "update-models"])
-    refresh.add_argument("--preset", action="append", choices=["text", "audio", "video", "multimodal", "image", "text-to-image"])
+    refresh.add_argument("--preset", action="append", choices=CATALOG_PRESETS)
     refresh.add_argument("--page-size", type=int, default=30)
     refresh.add_argument("--pages", type=int, default=1)
     refresh.add_argument("--output-dir")
